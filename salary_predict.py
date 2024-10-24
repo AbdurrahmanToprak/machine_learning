@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.neighbors import KNeighborsRegressor
 from sklearn.preprocessing import MinMaxScaler, RobustScaler, OneHotEncoder, StandardScaler
 
 pd.set_option('display.float_format', lambda x: '%.2f' % x)
@@ -143,48 +144,77 @@ print(df)
 ################################################
 
 y = df["Salary"]
-
 X = df.drop(["Salary"], axis=1)
 
-X_scaled = StandardScaler().fit_transform(X)
+# Kategorik değişkenlerin one-hot encoding ile dönüştürülmesi
+X = pd.get_dummies(X, drop_first=True)
 
-X = pd.DataFrame(X_scaled, columns=X.columns)
-
-# Split the data
+# Veri setini bölme
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=17)
 
-# Create and fit the model
-model = LinearRegression()
-model.fit(X_train, y_train)
+# Ölçeklendirme
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
 
-# Make predictions
-y_pred = model.predict(X_test)
+##########################################
+# Lineer Regresyon Modeli
+##########################################
+linear_model = LinearRegression()
+linear_model.fit(X_train_scaled, y_train)
 
-#######################################
-# Model Evaluation
-######################################
+# Tahmin yapma
+y_pred_linear = linear_model.predict(X_test_scaled)
 
-# Evaluate the model
-mse = mean_squared_error(y_test, y_pred)
-r2 = r2_score(y_test, y_pred)
+# Model değerlendirmesi
+mse_linear = mean_squared_error(y_test, y_pred_linear)
+r2_linear = r2_score(y_test, y_pred_linear)
 
-print(f'Mean Squared Error: {mse:.2f}')
-print(f'R-squared: {r2:.2f}')
+print(f'Linear Model - Mean Squared Error: {mse_linear:.2f}')
+print(f'Linear Model - R-squared: {r2_linear:.2f}')
 
-from sklearn.model_selection import cross_val_score
-
-# Model tanımı
+##########################################
+# Rastgele Orman Modeli
+##########################################
 rf_model = RandomForestRegressor(random_state=17)
+rf_model.fit(X_train, y_train)  # Rastgele ormanı orijinal özelliklerle eğitiyoruz
 
-# K-katlamalı çapraz doğrulama ile performans değerlendirmesi
-cv_scores = cross_val_score(rf_model, X, y, cv=5)  # 5 katlı
-print(f'Cross-validated scores: {cv_scores}')
-print(f'Mean CV score: {cv_scores.mean()}')
+# Tahmin yapma
+y_pred_rf = rf_model.predict(X_test)
 
+# Model değerlendirmesi
+mse_rf = mean_squared_error(y_test, y_pred_rf)
+r2_rf = r2_score(y_test, y_pred_rf)
+
+print(f'Random Forest Model - Mean Squared Error: {mse_rf:.2f}')
+print(f'Random Forest Model - R-squared: {r2_rf:.2f}')
+
+##########################################
+# KNN Modeli
+##########################################
+knn_model = KNeighborsRegressor(n_neighbors=5)  # n_neighbors değeri ayarlanabilir
+knn_model.fit(X_train_scaled, y_train)  # Ölçeklendirilmiş verilerle eğitiyoruz
+
+# Tahmin yapma
+y_pred_knn = knn_model.predict(X_test_scaled)
+
+# Model değerlendirmesi
+mse_knn = mean_squared_error(y_test, y_pred_knn)
+r2_knn = r2_score(y_test, y_pred_knn)
+
+print(f'KNN Model - Mean Squared Error: {mse_knn:.2f}')
+print(f'KNN Model - R-squared: {r2_knn:.2f}')
 
 ####################################
-# Prediction for A New Observation
+# Yeni Bir Gözlem için Tahmin
 #######################################
-
 random_user = X.sample(1, random_state=17)
-model.predict(random_user)
+random_user_scaled = scaler.transform(random_user)  # Aynı ölçeklendirmeyi uygula
+
+predicted_salary_linear = linear_model.predict(random_user_scaled)
+predicted_salary_rf = rf_model.predict(random_user)
+predicted_salary_knn = knn_model.predict(random_user_scaled)
+
+print(f'Tahmin Edilen Maaş (Linear): {predicted_salary_linear[0]:.2f}')
+print(f'Tahmin Edilen Maaş (Random Forest): {predicted_salary_rf[0]:.2f}')
+print(f'Tahmin Edilen Maaş (KNN): {predicted_salary_knn[0]:.2f}')
