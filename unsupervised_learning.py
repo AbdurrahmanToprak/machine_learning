@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import random
 import matplotlib.pyplot as plt
-from numpy.random.c_distributions import random_standard_normal
+
 from seaborn import clustermap
 from sklearn.cluster import KMeans
 from sklearn.model_selection import cross_val_score, GridSearchCV
