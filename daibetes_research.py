@@ -343,30 +343,30 @@ def diabetes_data_prep(dataframe):
                           cmap="RdBu")
         plt.show()
 
-    df = pd.read_csv('datasets/diabetes.csv')
+    dataframe = pd.read_csv('datasets/diabetes.csv')
 
-    check_df(df)
+    check_df(dataframe)
 
     # değişken türlerinin ayrıştırılması
 
-    cat_cols, num_cols, cat_but_car = grab_col_names(df, cat_th=5, car_th=20)
+    cat_cols, num_cols, cat_but_car = grab_col_names(dataframe, cat_th=5, car_th=20)
 
     # kategorik değişkenlerin incelenmesi
     for col in cat_cols:
-        cat_summary(df, col, plot=True)
+        cat_summary(dataframe, col, plot=True)
 
     # sayısal değişkenlerin incelenmesi
-    df[num_cols].describe().T
+    dataframe[num_cols].describe().T
 
     for col in num_cols:
-        num_summary(df, col, plot=True)
+        num_summary(dataframe, col, plot=True)
 
     # sayısal değişkenlerin birbirleri ile korelasyonu
-    correlation_matrix(df, num_cols)
+    correlation_matrix(dataframe, num_cols)
 
     # target ile sayısal değişkenlerin incelenmesi
     for col in num_cols:
-        target_summary_with_num(df, "Outcome", col)
+        target_summary_with_num(dataframe, "Outcome", col)
 
     #########################################
     # 2. Data Preprocessing & Feature Engineering
@@ -397,56 +397,56 @@ def diabetes_data_prep(dataframe):
         return dataframe
 
     # değişken isimlerini büyütmek
-    df.columns = [col.upper() for col in df.columns]
+    dataframe.columns = [col.upper() for col in dataframe.columns]
 
     # Glucose
-    df['NEW_GLUCOSE_CAT'] = pd.cut(x=df['GLUCOSE'], bins=[-1, 139, 200], labels=["normal", "prediabetes"])
+    dataframe['NEW_GLUCOSE_CAT'] = pd.cut(x=dataframe['GLUCOSE'], bins=[-1, 139, 200], labels=["normal", "prediabetes"])
 
     # Age
-    df.loc[(df['AGE'] < 35), "NEW_AGE_CAT"] = 'young'
-    df.loc[(df['AGE'] >= 35) & (df['AGE'] <= 55), "NEW_AGE_CAT"] = 'middleage'
-    df.loc[(df['AGE'] > 55), "NEW_AGE_CAT"] = 'old'
+    dataframe.loc[(dataframe['AGE'] < 35), "NEW_AGE_CAT"] = 'young'
+    dataframe.loc[(dataframe['AGE'] >= 35) & (dataframe['AGE'] <= 55), "NEW_AGE_CAT"] = 'middleage'
+    dataframe.loc[(dataframe['AGE'] > 55), "NEW_AGE_CAT"] = 'old'
 
     # BMI
-    df['NEW_BMI_RANGE'] = pd.cut(x=df['BMI'], bins=[-1, 18.5, 24.9, 29.9, 100],
+    dataframe['NEW_BMI_RANGE'] = pd.cut(x=dataframe['BMI'], bins=[-1, 18.5, 24.9, 29.9, 100],
                                  labels=["underweight", "healthy", "overweight", "obese"])
 
     # BloodPressure
-    df['NEW_BLOODPRESSURE'] = pd.cut(x=df['BLOODPRESSURE'], bins=[-1, 79, 89, 123],
+    dataframe['NEW_BLOODPRESSURE'] = pd.cut(x=dataframe['BLOODPRESSURE'], bins=[-1, 79, 89, 123],
                                      labels=["normal", "hs1", "hs2"])
 
 
-    cat_cols, num_cols, cat_but_car = grab_col_names(df, cat_th=5, car_th=20)
+    cat_cols, num_cols, cat_but_car = grab_col_names(dataframe, cat_th=5, car_th=20)
     for col in cat_cols:
-        cat_summary(df, col)
+        cat_summary(dataframe, col)
 
     for col in cat_cols:
-        target_summary_with_cat(df, "OUTCOME", col)
+        target_summary_with_cat(dataframe, "OUTCOME", col)
 
     cat_cols = [col for col in cat_cols if "OUTCOME" not in col]
 
-    df = one_hot_encoder(df, cat_cols, drop_first=True)
-    check_df(df)
+    dataframe = one_hot_encoder(dataframe, cat_cols, drop_first=True)
+    check_df(dataframe)
 
-    df.columns = [col.upper() for col in df.columns]
+    dataframe.columns = [col.upper() for col in dataframe.columns]
 
     # güncel grabcolnames
-    cat_cols, num_cols, cat_but_car = grab_col_names(df, cat_th=5, car_th=20)
+    cat_cols, num_cols, cat_but_car = grab_col_names(dataframe, cat_th=5, car_th=20)
     cat_cols = [col for col in cat_cols if "OUTCOME" not in col]
 
     for col in num_cols:
-        print(col, check_outlier(df, col, 0.05, 0.95))
+        print(col, check_outlier(dataframe, col, 0.05, 0.95))
 
-    replace_with_thresholds(df, "INSULIN")
+    replace_with_thresholds(dataframe, "INSULIN")
 
     # standartlaştırma
 
-    X_scaled = StandardScaler().fit_transform(df[num_cols])
+    X_scaled = StandardScaler().fit_transform(dataframe[num_cols])
 
-    df[num_cols] = pd.DataFrame(X_scaled, columns=df[num_cols].columns)
+    dataframe[num_cols] = pd.DataFrame(X_scaled, columns=dataframe[num_cols].columns)
 
-    y = df["OUTCOME"]
-    X = df.drop("OUTCOME", axis=1)
+    y = dataframe["OUTCOME"]
+    X = dataframe.drop("OUTCOME", axis=1)
 
     return X, y
 
